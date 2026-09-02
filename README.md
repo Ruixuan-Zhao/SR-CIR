@@ -47,6 +47,7 @@ The code uses R and the following R packages:
 - `SR/run_all_DR.R`: runs both simulation examples for sample sizes 500 and 1,000 for survival ratio model.
 - `CIR/simul_ex_cir.R`: generates simulated data under the cumulative incidence ratio model.
 - `CIR/run_simul_cir.R`: runs the simulations under the nuisance-model configurations for cumulative incidence ratio model.
+- `CIR/cir_censoring_plot.R`: produces the boxplots from the raw simulation results.
 
 ### Real Data Files
 
@@ -54,6 +55,7 @@ The prostate cancer trial dataset (`prostate.rda`) is publicly available from th
 
 - `SR/RealData_KM.R`: preprocesses the prostate cancer trial data and produces the Kaplan–Meier survival-curve figure.
 - `SR/RealData_t_t2.R`: obtains the maximum likelihood and doubly robust estimators, and produces the tables and survival ratio figures.
+- `SR/RealData_Addplots.R`: draws the figures in the Supplementary Materials.
 
 ### Run the Prostate Cancer Trial Analysis
 
@@ -64,6 +66,7 @@ setwd("SR")
 dir.create("Figures", showWarnings = FALSE)
 source("RealData_KM.R")
 source("RealData_t_t2.R")
+source("RealData_Addplots.R")
 ```
 
 ### Run Simulations for Survival Ratio Model
@@ -104,6 +107,14 @@ The `--cores` argument can be adjusted to match the number of available local CP
 - `raw_results.csv`: replicate-level estimates, standard errors, confidence intervals, and biases.
 - `Simu.RData`: simulation objects and results.
 - `simu.out`: simulation settings and summary results.
+
+
+
+After completing all four simulation runs, generate the figure of boxplots using:
+
+```bash
+Rscript cir_censoring_plot.R
+```
 
 
 
