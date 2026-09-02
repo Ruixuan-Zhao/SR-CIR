@@ -2,7 +2,6 @@
 ########################### CIR chapter 4 simulation ###########################
 ################################################################################
 
-.libPaths(c("/home/yanjin41/R/4.3.1", .libPaths()))
 boot_parse_args.cir <- function(args = commandArgs(trailingOnly = TRUE)) {
   if (length(args) == 0L) {
     return(list())
@@ -32,6 +31,21 @@ if (is.na(code_dir) || !nzchar(code_dir)) {
 }
 code_dir <- normalizePath(code_dir, winslash = "/", mustWork = TRUE)
 setwd(code_dir)
+
+required_packages <- c("brm", "numDeriv")
+missing_packages <- required_packages[
+  !vapply(required_packages, requireNamespace, logical(1L), quietly = TRUE)
+]
+if (length(missing_packages) > 0L) {
+  stop(
+    sprintf(
+      "Missing required R package(s): %s. R_LIBS_USER=%s",
+      paste(missing_packages, collapse = ", "),
+      Sys.getenv("R_LIBS_USER", unset = "<not set>")
+    ),
+    call. = FALSE
+  )
+}
 
 
 source_files <- c(
@@ -73,16 +87,18 @@ timepoints <- if (example == 1L) {
   stop("example must be 1 or 2.", call. = FALSE)
 }
 
-rho.tr   <- c(0.8, 0.25)
-tau.tr   <- c(-1.8, 0.5)
+rho.tr   <- c(0.8, 1.4)
+tau.tr   <- c(-1.5, 1.2)
 gamma.tr <- c(0.1, -0.3)
-eta.tr   <- c(-2.5, 0.3)
+eta.tr   <- c(-3.2, 1.0)
 
 settings <- c(
   "all_correct",
   "sop_wrong_ps_correct_cen_correct",
   "sop_correct_ps_wrong_cen_wrong",
-  "sop_wrong_ps_wrong_cen_wrong"
+  "sop_wrong_ps_wrong_cen_wrong",
+  "sop_wrong_ps_correct_cen_wrong",
+  "sop_wrong_ps_wrong_cen_correct"
 )
 
 p <- length(rho.tr)
@@ -108,7 +124,15 @@ point.est.cen <- array(NA_real_, c(nsim, p_cen, length(settings)), dimnames = li
 sd.est.cen <- lcb.est.cen <- ucb.est.cen <- point.est.cen
 
 run_one_sim <- function(j) {
-  dat <- Simul.Ex.cir(rho.tr, tau.tr, gamma.tr, timepoints, n, sample.seed = seed_fix+j)
+  dat <- Simul.Ex.cir(
+    rho.tr = rho.tr,
+    tau.tr = tau.tr,
+    gamma.tr = gamma.tr,
+    timepoints = timepoints,
+    n = n,
+    sample.seed = seed_fix + j,
+    eta.tr = eta.tr
+  )
   a <- dat$a
   x <- dat$x
   y <- dat$y
@@ -260,13 +284,12 @@ if (cores > 1L) {
   work_dir <- getwd()
   parallel::clusterExport(cl, c("work_dir", "source_files"), envir = environment())
   parallel::clusterEvalQ(cl, {
-    .libPaths(c("/home/yanjin41/R/4.3.1", .libPaths()))
     setwd(work_dir)
     invisible(lapply(source_files, source))
   })
   parallel::clusterExport(
     cl,
-    c("n", "nsim", "seed_fix", "timepoints", "rho.tr", "tau.tr", "gamma.tr", "settings",
+    c("n", "nsim", "seed_fix", "timepoints", "rho.tr", "tau.tr", "gamma.tr", "eta.tr", "settings",
       "p", "p_op", "p_ps", "p_cen", "run_one_sim"),
     envir = environment()
   )

@@ -3,7 +3,8 @@
 ################################################################################
 
 Simul.Ex.cir <- function(rho.tr, tau.tr, gamma.tr = c(0.1, -0.5),
-                         timepoints, n, sample.seed = NULL) {
+                         timepoints, n, sample.seed = NULL,
+                         eta.tr = c(-2.5, 0.3)) {
   if (!is.null(sample.seed)) set.seed(sample.seed)
   m <- length(timepoints)
   p <- length(rho.tr) - 1L
@@ -47,14 +48,12 @@ Simul.Ex.cir <- function(rho.tr, tau.tr, gamma.tr = c(0.1, -0.5),
     t_event[i] <- if (idx <= m) timepoints[idx] else Inf
   }
 
-  gamma0 <- -2.5
-  gammaL <- rep(0.3, p)
   c_time <- rep(max(timepoints), n)
   at_risk <- rep(TRUE, n)
   for (k in seq_len(m)) {
     idx <- which(at_risk)
     if (length(idx) == 0L) break
-    linpred <- gamma0 + drop(x_pre[idx, , drop = FALSE] %*% gammaL)
+    linpred <- drop(x[idx, , drop = FALSE] %*% eta.tr)
     p_ck <- expit.cir(linpred)
     cens_now <- idx[stats::rbinom(length(idx), 1, p_ck) == 1L]
     if (length(cens_now) > 0L) {
